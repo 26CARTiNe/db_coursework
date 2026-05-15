@@ -4,9 +4,12 @@ import java.util.List;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
 import jakarta.ws.rs.NotFoundException;
-
+import ru.rsatu.db.entity.CityEntity;
 import ru.rsatu.db.entity.MatchEntity;
+import ru.rsatu.db.entity.RefereeEntity;
+import ru.rsatu.db.entity.TeamEntity;
 import ru.rsatu.mapper.MatchMapper;
 import ru.rsatu.repository.MatchRepository;
 import ru.rsatu.dto.view.MatchViewDTO;
@@ -17,12 +20,15 @@ public class MatchService implements ServiceInterface<MatchViewDTO, MatchSaveDTO
 
     private final MatchRepository matchRepository;
     private final MatchMapper matchMapper;
+    private final EntityManager entityManager;
 
     @Inject
     MatchService(MatchRepository matchRepository,
-            MatchMapper matchMapper) {
+            MatchMapper matchMapper,
+            EntityManager entityManager) {
         this.matchRepository = matchRepository;
         this.matchMapper = matchMapper;
+        this.entityManager = entityManager;
     }
 
     public MatchViewDTO getById(Long id) {
@@ -53,10 +59,10 @@ public class MatchService implements ServiceInterface<MatchViewDTO, MatchSaveDTO
             throw new NotFoundException("Match with id = " + dto.getId() + " not found");
         }
 
-        entity.setTeamGuest(dto.getTeamGuestId());
-        entity.setTeamHost(dto.getTeamHostId());
-        entity.setReferee(dto.getRefereeId());
-        entity.setCity(dto.getCityId());
+        entity.setTeamGuest(entityManager.getReference(TeamEntity.class, dto.getTeamGuestId()));
+        entity.setTeamHost(entityManager.getReference(TeamEntity.class, dto.getTeamHostId()));
+        entity.setReferee(entityManager.getReference(RefereeEntity.class, dto.getRefereeId()));
+        entity.setCity(entityManager.getReference(CityEntity.class, dto.getCityId()));
 
         matchRepository.save(entity);
         return matchMapper.toDTO(entity);

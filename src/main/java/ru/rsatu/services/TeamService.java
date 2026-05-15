@@ -5,7 +5,8 @@ import java.util.List;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.NotFoundException;
-
+import jakarta.persistence.EntityManager;
+import ru.rsatu.db.entity.CityEntity;
 import ru.rsatu.db.entity.TeamEntity;
 import ru.rsatu.mapper.TeamMapper;
 import ru.rsatu.repository.TeamRepository;
@@ -17,12 +18,15 @@ public class TeamService implements ServiceInterface<TeamViewDTO, TeamSaveDTO, T
 
     private final TeamRepository teamRepository;
     private final TeamMapper teamMapper;
+    private final EntityManager entityManager;
 
     @Inject
     TeamService(TeamRepository teamRepository,
-            TeamMapper teamMapper) {
+            TeamMapper teamMapper,
+            EntityManager entityManager) {
         this.teamRepository = teamRepository;
         this.teamMapper = teamMapper;
+        this.entityManager = entityManager;
     }
 
     public TeamViewDTO getById(Long id) {
@@ -53,7 +57,7 @@ public class TeamService implements ServiceInterface<TeamViewDTO, TeamSaveDTO, T
             throw new NotFoundException("Team with id = " + dto.getId() + " not found");
         }
 
-        entity.setCity(dto.getCityId());
+        entity.setCity(entityManager.getReference(CityEntity.class, dto.getCityId()));
 
         teamRepository.save(entity);
         return teamMapper.toDTO(entity);

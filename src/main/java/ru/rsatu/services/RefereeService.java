@@ -5,7 +5,8 @@ import java.util.List;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.NotFoundException;
-
+import jakarta.persistence.EntityManager;
+import ru.rsatu.db.entity.CityEntity;
 import ru.rsatu.db.entity.RefereeEntity;
 import ru.rsatu.mapper.RefereeMapper;
 import ru.rsatu.repository.RefereeRepository;
@@ -17,12 +18,15 @@ public class RefereeService implements ServiceInterface<RefereeViewDTO, RefereeS
 
     private final RefereeRepository refereeRepository;
     private final RefereeMapper refereeMapper;
+    private final EntityManager entityManager;
 
     @Inject
     RefereeService(RefereeRepository refereeRepository,
-            RefereeMapper refereeMapper) {
+            RefereeMapper refereeMapper,
+            EntityManager entityManager) {
         this.refereeRepository = refereeRepository;
         this.refereeMapper = refereeMapper;
+        this.entityManager = entityManager;
     }
 
     public RefereeViewDTO getById(Long id) {
@@ -53,7 +57,7 @@ public class RefereeService implements ServiceInterface<RefereeViewDTO, RefereeS
             throw new NotFoundException("Referee with id = " + dto.getId() + " not found");
         }
 
-        entity.setCity(dto.getCityId());
+        entity.setCity(entityManager.getReference(CityEntity.class, dto.getCityId()));
 
         refereeRepository.save(entity);
         return refereeMapper.toDTO(entity);
