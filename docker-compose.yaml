@@ -1,12 +1,12 @@
 services:
   db:
     image: postgres:18
-    container_name: bs_db_container
+    container_name: bc_db_container
     restart: always
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin
-      POSTGRES_DB: bs_db
+      POSTGRES_DB: bc_db
     ports:
       - "5432:5432"
     volumes:

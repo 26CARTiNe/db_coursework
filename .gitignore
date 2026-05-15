@@ -2,3 +2,4 @@ mvnw*
 .*
 !.gitignore
 target/
+/src/main/docker/*
