@@ -4,8 +4,9 @@ import java.util.List;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.NotFoundException;
 import jakarta.persistence.EntityManager;
+import jakarta.transaction.Transactional;
+import jakarta.ws.rs.NotFoundException;
 import ru.rsatu.db.entity.CityEntity;
 import ru.rsatu.db.entity.TeamEntity;
 import ru.rsatu.mapper.TeamMapper;
@@ -43,14 +44,21 @@ public class TeamService implements ServiceInterface<TeamViewDTO, TeamSaveDTO, T
         return teamRepository.findAll().stream().map(teamMapper::toDTO).toList();
     }
 
+    @Transactional
     public TeamViewDTO create(TeamSaveDTO dto) {
+        dto.setId(null);
         TeamEntity entity = teamMapper.toEntity(dto);
 
         teamRepository.save(entity);
         return teamMapper.toDTO(entity);
     }
 
+    @Transactional
     public TeamViewDTO update(TeamSaveDTO dto) {
+        if (dto.getId() == null) {
+            throw new IllegalArgumentException("Id is required for update");
+        }
+
         TeamEntity entity = teamRepository.findById(dto.getId());
 
         if (entity == null) {
@@ -63,6 +71,7 @@ public class TeamService implements ServiceInterface<TeamViewDTO, TeamSaveDTO, T
         return teamMapper.toDTO(entity);
     }
 
+    @Transactional
     public void deleteById(Long id) {
         teamRepository.deleteById(id);
     }

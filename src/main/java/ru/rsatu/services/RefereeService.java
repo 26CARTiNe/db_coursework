@@ -6,6 +6,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.NotFoundException;
 import jakarta.persistence.EntityManager;
+import jakarta.transaction.Transactional;
 import ru.rsatu.db.entity.CityEntity;
 import ru.rsatu.db.entity.RefereeEntity;
 import ru.rsatu.mapper.RefereeMapper;
@@ -43,14 +44,21 @@ public class RefereeService implements ServiceInterface<RefereeViewDTO, RefereeS
         return refereeRepository.findAll().stream().map(refereeMapper::toDTO).toList();
     }
 
+    @Transactional
     public RefereeViewDTO create(RefereeSaveDTO dto) {
+        dto.setId(null);
         RefereeEntity entity = refereeMapper.toEntity(dto);
 
         refereeRepository.save(entity);
         return refereeMapper.toDTO(entity);
     }
 
+    @Transactional
     public RefereeViewDTO update(RefereeSaveDTO dto) {
+        if (dto.getId() == null) {
+            throw new IllegalArgumentException("Id is required for update");
+        }
+
         RefereeEntity entity = refereeRepository.findById(dto.getId());
 
         if (entity == null) {
@@ -63,6 +71,7 @@ public class RefereeService implements ServiceInterface<RefereeViewDTO, RefereeS
         return refereeMapper.toDTO(entity);
     }
 
+    @Transactional
     public void deleteById(Long id) {
         refereeRepository.deleteById(id);
     }

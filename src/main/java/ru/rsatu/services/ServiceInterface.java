@@ -4,7 +4,6 @@ import java.util.List;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
-@ApplicationScoped
 public interface ServiceInterface<ViewDTO, SaveDTO, Entity> {
     ViewDTO getById(Long id);
 

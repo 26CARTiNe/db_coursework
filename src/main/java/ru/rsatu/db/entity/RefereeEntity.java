@@ -21,7 +21,7 @@ public class RefereeEntity {
     @GeneratedValue
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(optional = false)
     @JoinColumn(name = "city_id", nullable = false)
     private CityEntity city;
 }

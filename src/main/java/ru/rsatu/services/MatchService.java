@@ -5,6 +5,7 @@ import java.util.List;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
+import jakarta.transaction.Transactional;
 import jakarta.ws.rs.NotFoundException;
 import ru.rsatu.db.entity.CityEntity;
 import ru.rsatu.db.entity.MatchEntity;
@@ -45,14 +46,21 @@ public class MatchService implements ServiceInterface<MatchViewDTO, MatchSaveDTO
         return matchRepository.findAll().stream().map(matchMapper::toDTO).toList();
     }
 
+    @Transactional
     public MatchViewDTO create(MatchSaveDTO dto) {
+        dto.setId(null);
         MatchEntity entity = matchMapper.toEntity(dto);
 
         matchRepository.save(entity);
         return matchMapper.toDTO(entity);
     }
 
+    @Transactional
     public MatchViewDTO update(MatchSaveDTO dto) {
+        if (dto.getId() == null) {
+            throw new IllegalArgumentException("Id is required for update");
+        }
+
         MatchEntity entity = matchRepository.findById(dto.getId());
 
         if (entity == null) {
@@ -68,6 +76,7 @@ public class MatchService implements ServiceInterface<MatchViewDTO, MatchSaveDTO
         return matchMapper.toDTO(entity);
     }
 
+    @Transactional
     public void deleteById(Long id) {
         matchRepository.deleteById(id);
     }

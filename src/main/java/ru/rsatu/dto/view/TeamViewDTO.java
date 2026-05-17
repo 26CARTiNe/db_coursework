@@ -9,5 +9,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class TeamViewDTO {
     private Long id;
-    private CityViewDTO cityId;
+    private CityViewDTO city;
 }

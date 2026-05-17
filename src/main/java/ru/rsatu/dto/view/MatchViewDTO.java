@@ -9,8 +9,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class MatchViewDTO {
     private Long id;
-    private TeamViewDTO teamGuestId;
-    private TeamViewDTO teamHostId;
-    private RefereeViewDTO refereeId;
-    private CityViewDTO cityId;
+    private TeamViewDTO teamGuest;
+    private TeamViewDTO teamHost;
+    private RefereeViewDTO referee;
+    private CityViewDTO city;
 }

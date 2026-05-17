@@ -4,6 +4,7 @@ import java.util.List;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 import jakarta.ws.rs.NotFoundException;
 
 import ru.rsatu.db.entity.CityEntity;
@@ -39,14 +40,21 @@ public class CityService implements ServiceInterface<CityViewDTO, CitySaveDTO, C
         return cityRepository.findAll().stream().map(cityMapper::toDTO).toList();
     }
 
+    @Transactional
     public CityViewDTO create(CitySaveDTO dto) {
+        dto.setId(null);
         CityEntity entity = cityMapper.toEntity(dto);
 
         cityRepository.save(entity);
         return cityMapper.toDTO(entity);
     }
 
+    @Transactional
     public CityViewDTO update(CitySaveDTO dto) {
+        if (dto.getId() == null) {
+            throw new IllegalArgumentException("Id is required for update");
+        }
+
         CityEntity entity = cityRepository.findById(dto.getId());
 
         if (entity == null) {
@@ -57,6 +65,7 @@ public class CityService implements ServiceInterface<CityViewDTO, CitySaveDTO, C
         return cityMapper.toDTO(entity);
     }
 
+    @Transactional
     public void deleteById(Long id) {
         cityRepository.deleteById(id);
     }
