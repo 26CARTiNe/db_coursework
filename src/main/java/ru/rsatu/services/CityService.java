@@ -7,50 +7,61 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.NotFoundException;
 
-import ru.rsatu.db.entity.CityEntity;
-import ru.rsatu.mapper.CityMapper;
+import ru.rsatu.entity.CityEntity;
 import ru.rsatu.repository.CityRepository;
-import ru.rsatu.dto.view.CityViewDTO;
-import ru.rsatu.dto.save.CitySaveDTO;
+import ru.rsatu.dto.CityDTO;
 
 @ApplicationScoped
-public class CityService implements ServiceInterface<CityViewDTO, CitySaveDTO, CityEntity> {
-
-    private final CityRepository cityRepository;
-    private final CityMapper cityMapper;
+public class CityService implements ICityService {
 
     @Inject
-    CityService(CityRepository cityRepository,
-            CityMapper cityMapper) {
-        this.cityRepository = cityRepository;
-        this.cityMapper = cityMapper;
-    }
+    CityRepository cityRepository;
 
-    public CityViewDTO getById(Long id) {
+    public CityDTO getById(Long id) {
         CityEntity entity = cityRepository.findById(id);
 
         if (entity == null) {
             throw new NotFoundException("City with id = " + id + " not found");
         }
 
-        return cityMapper.toDTO(entity);
+        return toDTO(entity);
     }
 
-    public List<CityViewDTO> getAll() {
-        return cityRepository.findAll().stream().map(cityMapper::toDTO).toList();
+    public CityDTO toDTO(CityEntity entity){
+        CityDTO dto = new CityDTO();
+        dto.setId(entity.getId());
+        dto.setName(entity.getName());
+        dto.setCountry(entity.getCountry());
+        return dto;
+    }
+
+    public CityEntity toEntity(CityDTO dto) {
+        if (dto == null) {
+            return null;
+        }
+
+        CityEntity entity = new CityEntity();
+        entity.setId(dto.getId());
+        entity.setName(dto.getName());
+        entity.setCountry(dto.getCountry());
+        return entity;
+    }
+
+    public List<CityDTO> getAll() {
+        return cityRepository.findAll().stream().map(this::toDTO).toList();
     }
 
     @Transactional
-    public CityViewDTO create(CitySaveDTO dto) {
+    public CityDTO create(CityDTO dto) {
         dto.setId(null);
-        CityEntity entity = cityMapper.toEntity(dto);
+        CityEntity entity = toEntity(dto);
 
         cityRepository.save(entity);
-        return cityMapper.toDTO(entity);
+        return toDTO(entity);
     }
 
     @Transactional
-    public CityViewDTO update(CitySaveDTO dto) {
+    public CityDTO update(CityDTO dto) {
         if (dto.getId() == null) {
             throw new IllegalArgumentException("Id is required for update");
         }
@@ -62,7 +73,7 @@ public class CityService implements ServiceInterface<CityViewDTO, CitySaveDTO, C
         }
 
         cityRepository.save(entity);
-        return cityMapper.toDTO(entity);
+        return toDTO(entity);
     }
 
     @Transactional

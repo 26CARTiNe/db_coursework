@@ -8,7 +8,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
 import jakarta.transaction.Transactional;
 
-import ru.rsatu.db.entity.CityEntity;
+import ru.rsatu.entity.CityEntity;
 
 @ApplicationScoped
 public class CityRepository implements RepositoryInterface<CityEntity> {

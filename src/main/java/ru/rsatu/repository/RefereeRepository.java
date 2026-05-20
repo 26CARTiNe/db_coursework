@@ -8,7 +8,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
 import jakarta.transaction.Transactional;
 
-import ru.rsatu.db.entity.RefereeEntity;
+import ru.rsatu.entity.RefereeEntity;
 
 @ApplicationScoped
 public class RefereeRepository implements RepositoryInterface<RefereeEntity> {

@@ -8,7 +8,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
 import jakarta.transaction.Transactional;
 
-import ru.rsatu.db.entity.MatchEntity;
+import ru.rsatu.entity.MatchEntity;
 
 @ApplicationScoped
 public class MatchRepository implements RepositoryInterface<MatchEntity> {

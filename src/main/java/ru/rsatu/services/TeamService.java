@@ -4,57 +4,75 @@ import java.util.List;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.NotFoundException;
-import ru.rsatu.db.entity.CityEntity;
-import ru.rsatu.db.entity.TeamEntity;
-import ru.rsatu.mapper.TeamMapper;
+import ru.rsatu.entity.TeamEntity;
+import ru.rsatu.dto.TeamDTO;
 import ru.rsatu.repository.TeamRepository;
-import ru.rsatu.dto.save.TeamSaveDTO;
-import ru.rsatu.dto.view.TeamViewDTO;
 
 @ApplicationScoped
-public class TeamService implements ServiceInterface<TeamViewDTO, TeamSaveDTO, TeamEntity> {
-
-    private final TeamRepository teamRepository;
-    private final TeamMapper teamMapper;
-    private final EntityManager entityManager;
+public class TeamService implements ITeamService {
 
     @Inject
-    TeamService(TeamRepository teamRepository,
-            TeamMapper teamMapper,
-            EntityManager entityManager) {
-        this.teamRepository = teamRepository;
-        this.teamMapper = teamMapper;
-        this.entityManager = entityManager;
-    }
+    TeamRepository teamRepository;
+    @Inject
+    ICityService cityService;
 
-    public TeamViewDTO getById(Long id) {
+    public TeamDTO getById(Long id) {
         TeamEntity entity = teamRepository.findById(id);
 
         if (entity == null) {
             throw new NotFoundException("Team with id = " + id + " not found");
         }
 
-        return teamMapper.toDTO(entity);
+        return toDTO(entity);
     }
 
-    public List<TeamViewDTO> getAll() {
-        return teamRepository.findAll().stream().map(teamMapper::toDTO).toList();
+    @Override
+    public TeamDTO toDTO(TeamEntity entity) {
+        if (entity == null) {
+            return null;
+        }
+
+        TeamDTO dto = new TeamDTO();
+        dto.setId(entity.getId());
+        dto.setCity(cityService.toDTO(entity.getCity()));
+        dto.setName(entity.getName());
+        dto.setPeoplesInTeam(entity.getPeoplesInTeam());
+        dto.setNumOfWin(entity.getNumOfWin());
+        return dto;
+    }
+
+    @Override
+    public TeamEntity toEntity(TeamDTO dto) {
+        if (dto == null) {
+            return null;
+        }
+
+        TeamEntity entity = new TeamEntity();
+        entity.setId(dto.getId());
+        dto.setCity(cityService.toDTO(entity.getCity()));
+        entity.setName(dto.getName());
+        entity.setPeoplesInTeam(dto.getPeoplesInTeam());
+        entity.setNumOfWin(dto.getNumOfWin());
+        return entity;
+    }
+
+    public List<TeamDTO> getAll() {
+        return teamRepository.findAll().stream().map(this::toDTO).toList();
     }
 
     @Transactional
-    public TeamViewDTO create(TeamSaveDTO dto) {
+    public TeamDTO create(TeamDTO dto) {
         dto.setId(null);
-        TeamEntity entity = teamMapper.toEntity(dto);
+        TeamEntity entity = toEntity(dto);
 
         teamRepository.save(entity);
-        return teamMapper.toDTO(entity);
+        return toDTO(entity);
     }
 
     @Transactional
-    public TeamViewDTO update(TeamSaveDTO dto) {
+    public TeamDTO update(TeamDTO dto) {
         if (dto.getId() == null) {
             throw new IllegalArgumentException("Id is required for update");
         }
@@ -65,15 +83,12 @@ public class TeamService implements ServiceInterface<TeamViewDTO, TeamSaveDTO, T
             throw new NotFoundException("Team with id = " + dto.getId() + " not found");
         }
 
-        entity.setCity(entityManager.getReference(CityEntity.class, dto.getCityId()));
-
-        teamRepository.save(entity);
-        return teamMapper.toDTO(entity);
+        teamRepository.save(toEntity(dto));
+        return toDTO(entity);
     }
 
     @Transactional
     public void deleteById(Long id) {
         teamRepository.deleteById(id);
     }
-
 }

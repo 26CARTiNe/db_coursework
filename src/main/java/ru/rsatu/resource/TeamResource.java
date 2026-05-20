@@ -1,59 +1,44 @@
-
 package ru.rsatu.resource;
 
 import java.util.List;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import ru.rsatu.services.TeamService;
-import ru.rsatu.dto.view.TeamViewDTO;
-import ru.rsatu.dto.save.TeamSaveDTO;
+import ru.rsatu.dto.TeamDTO;
 
-@Path("/teams")
+@Path("api/teams")
 @ApplicationScoped
 public class TeamResource {
 
-    private final TeamService teamService;
-
     @Inject
-    public TeamResource(TeamService teamService) {
-        this.teamService = teamService;
-    }
+    TeamService teamService;
 
     @GET
     @Path("/{id}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public TeamViewDTO getById(@PathParam("id") Long id) {
+    public TeamDTO getById(@PathParam("id") Long id) {
         return teamService.getById(id);
     }
 
     @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    public List<TeamViewDTO> getAll() {
+    public List<TeamDTO> getAll() {
         return teamService.getAll();
     }
 
     @POST
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_JSON)
-    public TeamViewDTO create(TeamSaveDTO dto) {
+    public TeamDTO create(TeamDTO dto) {
         return teamService.create(dto);
     }
 
     @PUT
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_JSON)
-    public TeamViewDTO update(TeamSaveDTO dto) {
+    public TeamDTO update(TeamDTO dto) {
         return teamService.update(dto);
     }
 

@@ -4,57 +4,81 @@ import java.util.List;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.NotFoundException;
-import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
-import ru.rsatu.db.entity.CityEntity;
-import ru.rsatu.db.entity.RefereeEntity;
-import ru.rsatu.mapper.RefereeMapper;
+import jakarta.ws.rs.NotFoundException;
+import ru.rsatu.entity.CityEntity;
+import ru.rsatu.entity.RefereeEntity;
+import ru.rsatu.dto.RefereeDTO;
+import ru.rsatu.repository.CityRepository;
 import ru.rsatu.repository.RefereeRepository;
-import ru.rsatu.dto.view.RefereeViewDTO;
-import ru.rsatu.dto.save.RefereeSaveDTO;
 
 @ApplicationScoped
-public class RefereeService implements ServiceInterface<RefereeViewDTO, RefereeSaveDTO, RefereeEntity> {
-
-    private final RefereeRepository refereeRepository;
-    private final RefereeMapper refereeMapper;
-    private final EntityManager entityManager;
+public class RefereeService implements IRefereeService {
 
     @Inject
-    RefereeService(RefereeRepository refereeRepository,
-            RefereeMapper refereeMapper,
-            EntityManager entityManager) {
-        this.refereeRepository = refereeRepository;
-        this.refereeMapper = refereeMapper;
-        this.entityManager = entityManager;
-    }
+    RefereeRepository refereeRepository;
+    @Inject
+    ICityService cityService;
 
-    public RefereeViewDTO getById(Long id) {
+    public RefereeDTO getById(Long id) {
         RefereeEntity entity = refereeRepository.findById(id);
 
         if (entity == null) {
             throw new NotFoundException("Referee with id = " + id + " not found");
         }
 
-        return refereeMapper.toDTO(entity);
+        return toDTO(entity);
     }
 
-    public List<RefereeViewDTO> getAll() {
-        return refereeRepository.findAll().stream().map(refereeMapper::toDTO).toList();
+    @Override
+    public RefereeDTO toDTO(RefereeEntity entity) {
+        if (entity == null) {
+            return null;
+        }
+
+        RefereeDTO dto = new RefereeDTO();
+        dto.setId(entity.getId());
+        dto.setCity(cityService.toDTO(entity.getCity()));
+        dto.setFIO(entity.getFIO());
+        dto.setLicense(entity.getLicense());
+        dto.setStageYears(entity.getStageYears());
+        return dto;
+    }
+
+    @Override
+    public RefereeEntity toEntity(RefereeDTO dto) {
+        if (dto == null) {
+            return null;
+        }
+
+        RefereeEntity entity = new RefereeEntity();
+        entity.setId(dto.getId());
+
+        if (dto.getCity() != null && dto.getCity().getId() != null) {
+            entity.setCity(cityService.toEntity(dto.getCity()));
+        }
+
+        entity.setFIO(dto.getFIO());
+        entity.setLicense(dto.getLicense());
+        entity.setStageYears(dto.getStageYears());
+        return entity;
+    }
+
+    public List<RefereeDTO> getAll() {
+        return refereeRepository.findAll().stream().map(this::toDTO).toList();
     }
 
     @Transactional
-    public RefereeViewDTO create(RefereeSaveDTO dto) {
+    public RefereeDTO create(RefereeDTO dto) {
         dto.setId(null);
-        RefereeEntity entity = refereeMapper.toEntity(dto);
+        RefereeEntity entity = toEntity(dto);
 
         refereeRepository.save(entity);
-        return refereeMapper.toDTO(entity);
+        return toDTO(entity);
     }
 
     @Transactional
-    public RefereeViewDTO update(RefereeSaveDTO dto) {
+    public RefereeDTO update(RefereeDTO dto) {
         if (dto.getId() == null) {
             throw new IllegalArgumentException("Id is required for update");
         }
@@ -65,10 +89,8 @@ public class RefereeService implements ServiceInterface<RefereeViewDTO, RefereeS
             throw new NotFoundException("Referee with id = " + dto.getId() + " not found");
         }
 
-        entity.setCity(entityManager.getReference(CityEntity.class, dto.getCityId()));
-
-        refereeRepository.save(entity);
-        return refereeMapper.toDTO(entity);
+        refereeRepository.save(toEntity(dto));
+        return toDTO(entity);
     }
 
     @Transactional

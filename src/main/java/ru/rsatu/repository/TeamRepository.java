@@ -8,7 +8,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
 import jakarta.transaction.Transactional;
 
-import ru.rsatu.db.entity.TeamEntity;
+import ru.rsatu.entity.TeamEntity;
 
 @ApplicationScoped
 public class TeamRepository implements RepositoryInterface<TeamEntity> {

@@ -1,11 +1,6 @@
-package ru.rsatu.db.entity;
+package ru.rsatu.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
 import lombok.Data;
 import lombok.AllArgsConstructor;
@@ -18,10 +13,14 @@ import lombok.NoArgsConstructor;
 @Table(name = "referees")
 public class RefereeEntity {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "city_id", nullable = false)
     private CityEntity city;
+
+    private String FIO;
+    private String license;
+    private Integer stageYears;
 }
