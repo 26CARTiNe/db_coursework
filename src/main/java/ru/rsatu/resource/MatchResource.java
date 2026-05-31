@@ -2,6 +2,7 @@ package ru.rsatu.resource;
 
 import java.util.List;
 
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.DELETE;
@@ -33,16 +34,19 @@ public class MatchResource {
     }
 
     @POST
+    @RolesAllowed("ADMIN")
     public MatchDTO create(MatchDTO dto) {
         return matchService.create(dto);
     }
 
     @PUT
+    @RolesAllowed("ADMIN")
     public MatchDTO update(MatchDTO dto) {
         return matchService.update(dto);
     }
 
     @Path("/{id}")
+    @RolesAllowed("ADMIN")
     @DELETE
     public Response deleteById(@PathParam("id") Long id) {
         matchService.deleteById(id);

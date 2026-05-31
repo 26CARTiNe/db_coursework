@@ -1,44 +1,3 @@
--- Создание таблиц с явным указанием автоинкремента
-CREATE TABLE IF NOT EXISTS cities
-(
-    id      BIGSERIAL PRIMARY KEY,
-    country VARCHAR(255) NOT NULL,
-    name    VARCHAR(255) NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS teams
-(
-    id            BIGSERIAL PRIMARY KEY,
-    city_id       BIGINT NOT NULL REFERENCES cities (id),
-    name          VARCHAR(255),
-    peoplesInTeam INTEGER,
-    numOfWin      INTEGER
-);
-
-CREATE TABLE IF NOT EXISTS referees
-(
-    id         BIGSERIAL PRIMARY KEY,
-    city_id    BIGINT NOT NULL REFERENCES cities (id),
-    FIO        VARCHAR(255),
-    license    VARCHAR(255),
-    stageYears INTEGER
-);
-
-CREATE TABLE IF NOT EXISTS matches
-(
-    id            BIGSERIAL PRIMARY KEY,
-    team_guest_id BIGINT NOT NULL REFERENCES teams (id),
-    team_host_id  BIGINT NOT NULL REFERENCES teams (id),
-    referee_id    BIGINT NOT NULL REFERENCES referees (id),
-    city_id       BIGINT NOT NULL REFERENCES cities (id),
-    stageType     INTEGER,
-    phaseType     INTEGER,
-    guestCount    INTEGER,
-    hostCount     INTEGER,
-    dateTime      TIMESTAMP
-);
-
--- Заполнение cities
 INSERT INTO cities (id, country, name)
 VALUES (1, 'Россия', 'Москва'),
        (2, 'Россия', 'Санкт-Петербург'),
@@ -71,3 +30,8 @@ VALUES (2, 1, 1, 1, 1, 4, 0, 0, '2023-10-15 15:00:00'),
        (5, 6, 5, 5, 3, 3, 0, 0,'2023-10-17 20:00:00'),
        (1, 3, 2, 2, 4, 2, 0, 0,'2023-10-18 16:00:00'),
        (4, 5, 4, 4, 6, 1, 0, 0,'2023-10-19 19:00:00');
+
+DELETE FROM users WHERE login = 'admin';
+
+INSERT INTO users (login, password, role)
+VALUES ('admin', '$2a$10$XKvHJZ8Z9Z9Z9Z9Z9Z9Z9O8xKvHJZ8Z9Z9Z9Z9Z9Z9Z9Z9Z9Z9Z9Z', 'ADMIN');

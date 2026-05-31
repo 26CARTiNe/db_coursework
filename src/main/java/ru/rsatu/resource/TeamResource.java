@@ -2,6 +2,7 @@ package ru.rsatu.resource;
 
 import java.util.List;
 
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.DELETE;
@@ -33,16 +34,19 @@ public class TeamResource {
     }
 
     @POST
+    @RolesAllowed("ADMIN")
     public TeamDTO create(TeamDTO dto) {
         return teamService.create(dto);
     }
 
     @PUT
+    @RolesAllowed("ADMIN")
     public TeamDTO update(TeamDTO dto) {
         return teamService.update(dto);
     }
 
     @Path("/{id}")
+    @RolesAllowed("ADMIN")
     @DELETE
     public Response deleteById(@PathParam("id") Long id) {
         teamService.deleteById(id);
