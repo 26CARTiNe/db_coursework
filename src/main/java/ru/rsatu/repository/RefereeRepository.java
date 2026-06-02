@@ -31,6 +31,15 @@ public class RefereeRepository implements RepositoryInterface<RefereeEntity> {
         return query.getResultList();
     }
 
+    public List<RefereeEntity> findRefereesNotFromCities(Long cityId1, Long cityId2) {
+        return entityManager.createQuery(
+            "SELECT r FROM RefereeEntity r WHERE r.city.id != :cityId1 AND r.city.id != :cityId2", 
+            RefereeEntity.class)
+            .setParameter("cityId1", cityId1)
+            .setParameter("cityId2", cityId2)
+            .getResultList();
+    }
+
     @Override
     @Transactional
     public void save(RefereeEntity entity) {
