@@ -255,6 +255,10 @@ public class MatchService implements IMatchService {
             revertTeamStats(entity, oldHostScore, oldGuestScore);
         }
 
+        if (dto.getPhaseType() == 2 && entity.getStageType() >= 2) {
+            throw new IllegalArgumentException("❌ Нельзя отменить матч плей-офф! Только завершить или перенести");
+        }
+
         matchRepository.save(entity);
         return toDTO(entity);
     }
