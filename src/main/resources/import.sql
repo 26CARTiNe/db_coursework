@@ -26,8 +26,3 @@ INSERT INTO matches (team_guest_id, team_host_id, referee_id, city_id, stageType
 (5, 6, 5, 5, 3, 3, 0, 0, '2023-10-17 20:00:00'),
 (1, 3, 2, 2, 4, 2, 0, 0, '2023-10-18 16:00:00'),
 (4, 5, 4, 4, 6, 1, 0, 0, '2023-10-19 19:00:00');
-
-DELETE FROM users WHERE login = 'admin';
-
-INSERT INTO users (id, login, password, role)
-VALUES (1, 'admin', '$2a$10$8.mQI4AwkoaNvq0CP3gmS.kirU6F72CQ0Veevea5G9HHSEJB95SlS', 'ADMIN');
