@@ -49,19 +49,18 @@ public class MatchRepository implements RepositoryInterface<MatchEntity> {
             .getResultList();
     }
 
+    public List<MatchEntity> findScheduledOrLiveMatches() {
+        return entityManager.createQuery(
+            "SELECT m FROM MatchEntity m WHERE m.phaseType = 4 OR m.phaseType = 3",
+            MatchEntity.class)
+            .getResultList();
+    }
+
     public List<MatchEntity> findByStageTypeAndPhaseType(int stageType, int phaseType) {
         return entityManager.createQuery(
             "SELECT m FROM MatchEntity m WHERE m.stageType = :stageType AND m.phaseType = :phaseType", 
             MatchEntity.class)
             .setParameter("stageType", stageType)
-            .setParameter("phaseType", phaseType)
-            .getResultList();
-    }
-
-    public List<MatchEntity> findByPhaseType(Integer phaseType) {
-        return entityManager.createQuery(
-            "SELECT m FROM MatchEntity m WHERE m.phaseType = :phaseType", 
-            MatchEntity.class)
             .setParameter("phaseType", phaseType)
             .getResultList();
     }

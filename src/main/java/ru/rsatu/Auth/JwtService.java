@@ -14,6 +14,7 @@ public class JwtService {
                 .subject(user.getLogin())
                 .groups(user.getRole().toString())
                 .claim(Claims.email.name(), user.getLogin())
+                .expiresIn(300)
                 .sign();
     }
 }
