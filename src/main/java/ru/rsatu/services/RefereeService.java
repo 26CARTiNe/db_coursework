@@ -6,7 +6,6 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.NotFoundException;
-import ru.rsatu.entity.CityEntity;
 import ru.rsatu.entity.RefereeEntity;
 import ru.rsatu.dto.RefereeDTO;
 import ru.rsatu.repository.CityRepository;
@@ -17,6 +16,8 @@ public class RefereeService implements IRefereeService {
 
     @Inject
     RefereeRepository refereeRepository;
+    @Inject
+    CityRepository cityRepository;
     @Inject
     ICityService cityService;
 
@@ -89,7 +90,12 @@ public class RefereeService implements IRefereeService {
             throw new NotFoundException("Referee with id = " + dto.getId() + " not found");
         }
 
-        refereeRepository.save(toEntity(dto));
+        entity.setFIO(dto.getFIO());
+        entity.setLicense(dto.getLicense());
+        entity.setStageYears(dto.getStageYears());
+        entity.setCity(cityRepository.findById(dto.getCity().getId()));
+
+        refereeRepository.save(entity);
         return toDTO(entity);
     }
 

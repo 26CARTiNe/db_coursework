@@ -10,13 +10,22 @@ import ru.rsatu.entity.MatchEntity;
 import ru.rsatu.dto.MatchDTO;
 import ru.rsatu.entity.MatchPhaseType;
 import ru.rsatu.entity.MatchStageType;
+import ru.rsatu.repository.CityRepository;
 import ru.rsatu.repository.MatchRepository;
+import ru.rsatu.repository.RefereeRepository;
+import ru.rsatu.repository.TeamRepository;
 
 @ApplicationScoped
 public class MatchService implements IMatchService {
 
     @Inject
     MatchRepository matchRepository;
+    @Inject
+    TeamRepository teamRepository;
+    @Inject
+    CityRepository cityRepository;
+    @Inject
+    RefereeRepository refereeRepository;
     @Inject
     ICityService cityService;
     @Inject
@@ -66,17 +75,32 @@ public class MatchService implements IMatchService {
         if (dto == null) {
             return null;
         }
+        
         MatchEntity entity = new MatchEntity();
         entity.setId(dto.getId());
-        entity.setTeamGuest(teamService.toEntity(dto.getTeamGuest()));
-        entity.setTeamHost(teamService.toEntity(dto.getTeamHost()));
-        entity.setReferee(refereeService.toEntity(dto.getReferee()));
-        entity.setCity(cityService.toEntity(dto.getCity()));
         entity.setStageType(dto.getStageType());
         entity.setPhaseType(dto.getPhaseType());
-        entity.setHostCount(dto.getHostCount());
         entity.setGuestCount(dto.getGuestCount());
+        entity.setHostCount(dto.getHostCount());
         entity.setDateTime(dto.getDateTime());
+        
+        if (dto.getTeamGuest() != null && dto.getTeamGuest().getId() != null) {
+            entity.setTeamGuest(teamRepository.findById(dto.getTeamGuest().getId()));
+        }
+        if (dto.getTeamHost() != null && dto.getTeamHost().getId() != null) {
+            entity.setTeamHost(teamRepository.findById(dto.getTeamHost().getId()));
+        }
+        
+        if (dto.getReferee() != null && dto.getReferee().getId() != null) {
+            entity.setReferee(refereeRepository.findById(dto.getReferee().getId()));
+        }
+        
+        if (dto.getCity() != null && dto.getCity().getId() != null) {
+            entity.setCity(cityRepository.findById(dto.getCity().getId()));
+        } else {
+            throw new IllegalArgumentException("City is required for match");
+        }
+        
         return entity;
     }
 
@@ -105,7 +129,17 @@ public class MatchService implements IMatchService {
             throw new NotFoundException("Match with id = " + dto.getId() + " not found");
         }
 
-        matchRepository.save(toEntity(dto));
+        entity.setTeamGuest(teamRepository.findById(dto.getTeamGuest().getId()));
+        entity.setTeamHost(teamRepository.findById(dto.getTeamHost().getId()));
+        entity.setReferee(refereeRepository.findById(dto.getReferee().getId()));
+        entity.setCity(cityRepository.findById(dto.getCity().getId()));
+        entity.setStageType(dto.getStageType());
+        entity.setPhaseType(dto.getPhaseType());
+        entity.setGuestCount(dto.getGuestCount());
+        entity.setHostCount(dto.getHostCount());
+        entity.setDateTime(dto.getDateTime());
+
+        matchRepository.save(entity);
         return toDTO(entity);
     }
 

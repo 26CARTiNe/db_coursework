@@ -72,6 +72,8 @@ public class CityService implements ICityService {
             throw new NotFoundException("City with id = " + dto.getId() + " not found");
         }
 
+        entity.setName(dto.getName());
+        entity.setCountry(dto.getCountry());
         cityRepository.save(entity);
         return toDTO(entity);
     }

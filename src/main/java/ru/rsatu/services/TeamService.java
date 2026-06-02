@@ -8,6 +8,7 @@ import jakarta.transaction.Transactional;
 import jakarta.ws.rs.NotFoundException;
 import ru.rsatu.entity.TeamEntity;
 import ru.rsatu.dto.TeamDTO;
+import ru.rsatu.repository.CityRepository;
 import ru.rsatu.repository.TeamRepository;
 
 @ApplicationScoped
@@ -15,6 +16,8 @@ public class TeamService implements ITeamService {
 
     @Inject
     TeamRepository teamRepository;
+    @Inject
+    CityRepository cityRepository;
     @Inject
     ICityService cityService;
 
@@ -51,10 +54,14 @@ public class TeamService implements ITeamService {
 
         TeamEntity entity = new TeamEntity();
         entity.setId(dto.getId());
-        dto.setCity(cityService.toDTO(entity.getCity()));
         entity.setName(dto.getName());
         entity.setPeoplesInTeam(dto.getPeoplesInTeam());
         entity.setNumOfWin(dto.getNumOfWin());
+        
+        if (dto.getCity() != null && dto.getCity().getId() != null) {
+            entity.setCity(cityService.toEntity(dto.getCity()));
+        }
+        
         return entity;
     }
 
@@ -83,7 +90,12 @@ public class TeamService implements ITeamService {
             throw new NotFoundException("Team with id = " + dto.getId() + " not found");
         }
 
-        teamRepository.save(toEntity(dto));
+        entity.setName(dto.getName());
+        entity.setPeoplesInTeam(dto.getPeoplesInTeam());
+        entity.setNumOfWin(dto.getNumOfWin());
+        entity.setCity(cityRepository.findById(dto.getCity().getId()));
+
+        teamRepository.save(entity);
         return toDTO(entity);
     }
 
