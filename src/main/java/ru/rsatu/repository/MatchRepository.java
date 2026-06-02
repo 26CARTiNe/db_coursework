@@ -41,6 +41,22 @@ public class MatchRepository implements RepositoryInterface<MatchEntity> {
             .getResultList();
     }
 
+    public List<MatchEntity> findByStageType(int stageType) {
+        return entityManager.createQuery(
+            "SELECT m FROM MatchEntity m WHERE m.stageType = :stageType", 
+            MatchEntity.class)
+            .setParameter("stageType", stageType)
+            .getResultList();
+    }
+
+    public List<MatchEntity> findByStageTypeAndPhaseType(int stageType, int phaseType) {
+        return entityManager.createQuery(
+            "SELECT m FROM MatchEntity m WHERE m.stageType = :stageType AND m.phaseType = :phaseType", 
+            MatchEntity.class)
+            .setParameter("stageType", stageType)
+            .setParameter("phaseType", phaseType)
+            .getResultList();
+    }
 
     public List<MatchEntity> findByPhaseType(Integer phaseType) {
         return entityManager.createQuery(
@@ -75,5 +91,11 @@ public class MatchRepository implements RepositoryInterface<MatchEntity> {
         if (entity != null) {
             entityManager.remove(entity);
         }
+    }
+
+    public void deleteByStageType(int stageType) {
+        entityManager.createQuery("DELETE FROM MatchEntity WHERE stageType = :stageType")
+            .setParameter("stageType", stageType)
+            .executeUpdate();
     }
 }

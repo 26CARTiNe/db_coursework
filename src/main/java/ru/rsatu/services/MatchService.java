@@ -5,16 +5,20 @@ import java.time.ZonedDateTime;
 import java.time.ZoneId;
 import java.time.LocalDateTime;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.NotFoundException;
+import ru.rsatu.entity.CityEntity;
 import ru.rsatu.entity.MatchEntity;
 import ru.rsatu.dto.MatchDTO;
 import ru.rsatu.entity.MatchPhaseType;
 import ru.rsatu.entity.MatchStageType;
+import ru.rsatu.entity.RefereeEntity;
 import ru.rsatu.entity.TeamEntity;
 import ru.rsatu.repository.CityRepository;
 import ru.rsatu.repository.MatchRepository;
@@ -65,7 +69,7 @@ public class MatchService implements IMatchService {
         return matches.stream().map(this::toDTO).toList();
     }
 
-    @Scheduled(every = "60s")
+    @Scheduled(every = "5s")
     public void updateMatchesStatus() {
         ZoneId zoneId = ZoneId.of("Europe/Moscow");
         ZonedDateTime now = ZonedDateTime.now(zoneId);
@@ -77,29 +81,54 @@ public class MatchService implements IMatchService {
             LocalDateTime matchDateTime = match.getDateTime();
             if (matchDateTime == null) continue;
             
+            Integer oldPhaseType = match.getPhaseType();
             Integer newPhaseType = null;
             
             if (matchDateTime.isAfter(currentDateTime)) {
-                newPhaseType = 4; // Запланирован
-            }
-            else if (matchDateTime.isBefore(currentDateTime) && 
-                     matchDateTime.plusHours(3).isAfter(currentDateTime)) {
-                newPhaseType = 3; // Идет
-            }
-            else if (matchDateTime.plusHours(3).isBefore(currentDateTime)) {
-                newPhaseType = 1; // Завершен
-            }
-            
-            if (newPhaseType != null && !newPhaseType.equals(match.getPhaseType())) {
-                match.setPhaseType(newPhaseType);
-                
-                if (newPhaseType == 4 || newPhaseType == 2) {
+                newPhaseType = 4;
+                if (match.getHostCount() != 0 || match.getGuestCount() != 0) {
                     match.setHostCount(0);
                     match.setGuestCount(0);
                 }
-                
+            }
+            else if (matchDateTime.isBefore(currentDateTime) && 
+                     matchDateTime.plusHours(3).isAfter(currentDateTime)) {
+                newPhaseType = 3;
+            }
+            else if (matchDateTime.plusHours(3).isBefore(currentDateTime)) {
+                newPhaseType = 1;
+            }
+            
+            if (newPhaseType != null && !newPhaseType.equals(oldPhaseType)) {
+                match.setPhaseType(newPhaseType);
                 matchRepository.save(match);
             }
+        }
+
+        for (int stage = 2; stage <= 4; stage++) {
+            tryGenerateNextRound(stage);
+        }
+    }
+
+    private void tryGenerateNextRound(int currentStage) {
+        List<MatchEntity> allMatchesInStage = matchRepository.findByStageType(currentStage);
+        
+        if (allMatchesInStage.isEmpty()) {
+            return;
+        }
+        
+        boolean allFinished = allMatchesInStage.stream()
+            .allMatch(match -> match.getPhaseType() == 1);
+        
+        if (!allFinished) {
+            return;
+        }
+        
+        int nextStage = currentStage + 1;
+        List<MatchEntity> nextStageMatches = matchRepository.findByStageType(nextStage);
+        
+        if (nextStageMatches.isEmpty()) {
+            generateNextRound(currentStage);
         }
     }
 
@@ -208,11 +237,16 @@ public class MatchService implements IMatchService {
 
         resetScoresIfNeeded(entity);
         
-        boolean isNowFinished = dto.getPhaseType() == 1; // ЗАКОНЧЕН
+        boolean isNowFinished = dto.getPhaseType() == 1;
         boolean wasFinished = oldPhaseType == 1;
         
         if (isNowFinished && !wasFinished) {
             updateTeamStats(entity, dto.getHostCount(), dto.getGuestCount());
+            
+            int currentStage = dto.getStageType();
+            if (currentStage == 2 || currentStage == 3 || currentStage == 4) {
+                generateNextRound(currentStage);
+            }
         } else if (isNowFinished && wasFinished && 
                    (!oldHostScore.equals(dto.getHostCount()) || !oldGuestScore.equals(dto.getGuestCount()))) {
             revertTeamStats(entity, oldHostScore, oldGuestScore);
@@ -256,7 +290,6 @@ public class MatchService implements IMatchService {
         matchRepository.deleteById(id);
     }
 
-
     @Transactional
     public MatchDTO finishMatch(Long matchId, Integer homeScore, Integer guestScore) {
         MatchEntity match = matchRepository.findById(matchId);
@@ -281,6 +314,83 @@ public class MatchService implements IMatchService {
         teamRepository.save(guestTeam);
         matchRepository.save(match);
         
+        int currentStage = match.getStageType();
+        if (currentStage == 2 || currentStage == 3 || currentStage == 4) {
+            generateNextRound(currentStage);
+        }
+        
         return toDTO(match);
+    }
+
+    @Transactional
+    public void generateNextRound(int currentStage) {
+        int nextStage = currentStage + 1;
+        
+        List<MatchEntity> finishedMatches = matchRepository.findByStageTypeAndPhaseType(currentStage, 1);
+        
+        if (finishedMatches.isEmpty()) {
+            return;
+        }
+        
+        List<MatchEntity> allMatchesInStage = matchRepository.findByStageType(currentStage);
+        if (finishedMatches.size() != allMatchesInStage.size()) {
+            return;
+        }
+        
+        List<TeamEntity> winners = new ArrayList<>();
+        for (MatchEntity match : finishedMatches) {
+            TeamEntity winner = null;
+            if (match.getHostCount() > match.getGuestCount()) {
+                winner = match.getTeamHost();
+            } else if (match.getGuestCount() > match.getHostCount()) {
+                winner = match.getTeamGuest();
+            }
+            if (winner != null) {
+                winners.add(winner);
+            }
+        }
+        
+        if (winners.size() % 2 != 0) {
+            return;
+        }
+        
+        matchRepository.deleteByStageType(nextStage);
+        
+        Random random = new Random();
+        for (int i = 0; i < winners.size(); i += 2) {
+            TeamEntity team1 = winners.get(i);
+            TeamEntity team2 = winners.get(i + 1);
+            
+            CityEntity city = team1.getCity();
+            
+            List<RefereeEntity> availableReferees = refereeRepository.findRefereesNotFromCities(
+                team1.getCity().getId(), 
+                team2.getCity().getId()
+            );
+            
+            RefereeEntity referee = null;
+            if (!availableReferees.isEmpty()) {
+                referee = availableReferees.get(random.nextInt(availableReferees.size()));
+            } else {
+                referee = refereeRepository.findAll().stream().findFirst().orElse(null);
+            }
+            
+            if (referee == null) {
+                continue;
+            }
+            
+            MatchEntity newMatch = new MatchEntity();
+            newMatch.setTeamHost(team1);
+            newMatch.setTeamGuest(team2);
+            newMatch.setReferee(referee);
+            newMatch.setCity(city);
+            newMatch.setStageType(nextStage);
+            newMatch.setPhaseType(4);
+            newMatch.setHostCount(0);
+            newMatch.setGuestCount(0);
+            newMatch.setDateTime(LocalDateTime.now().plusDays(7));
+            
+            matchRepository.save(newMatch);
+        }
     }
 }
