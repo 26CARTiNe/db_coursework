@@ -1,5 +1,6 @@
 package ru.rsatu.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -29,6 +30,15 @@ public class MatchRepository implements RepositoryInterface<MatchEntity> {
         TypedQuery<MatchEntity> query = entityManager.createQuery("SELECT e FROM MatchEntity e",
                 MatchEntity.class);
         return query.getResultList();
+    }
+
+    public List<MatchEntity> findByDateRange(LocalDateTime start, LocalDateTime end) {
+        return entityManager.createQuery(
+            "SELECT m FROM MatchEntity m WHERE m.dateTime >= :start AND m.dateTime < :end ORDER BY m.dateTime",
+            MatchEntity.class)
+            .setParameter("start", start)
+            .setParameter("end", end)
+            .getResultList();
     }
 
     @Override

@@ -1,5 +1,7 @@
 package ru.rsatu.services;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -49,6 +51,14 @@ public class MatchService implements IMatchService {
         }
 
         return toDTO(entity);
+    }
+
+    public List<MatchDTO> getByDate(LocalDate date) {
+        LocalDateTime startOfDay = date.atStartOfDay();
+        LocalDateTime endOfDay = date.plusDays(1).atStartOfDay();
+        
+        List<MatchEntity> matches = matchRepository.findByDateRange(startOfDay, endOfDay);
+        return matches.stream().map(this::toDTO).toList();
     }
 
     @Override
