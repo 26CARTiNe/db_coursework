@@ -75,9 +75,9 @@ public class MatchService implements IMatchService {
         ZonedDateTime now = ZonedDateTime.now(zoneId);
         LocalDateTime currentDateTime = now.toLocalDateTime();
         
-        List<MatchEntity> activeMatches = matchRepository.findActiveMatches();
+        List<MatchEntity> matchesToUpdate = matchRepository.findScheduledOrLiveMatches();
         
-        for (MatchEntity match : activeMatches) {
+        for (MatchEntity match : matchesToUpdate) {
             LocalDateTime matchDateTime = match.getDateTime();
             if (matchDateTime == null) continue;
             
@@ -85,7 +85,7 @@ public class MatchService implements IMatchService {
             Integer newPhaseType = null;
             
             if (matchDateTime.isAfter(currentDateTime)) {
-                newPhaseType = 4;
+                newPhaseType = 4; // Запланирован
                 if (match.getHostCount() != 0 || match.getGuestCount() != 0) {
                     match.setHostCount(0);
                     match.setGuestCount(0);
@@ -93,10 +93,10 @@ public class MatchService implements IMatchService {
             }
             else if (matchDateTime.isBefore(currentDateTime) && 
                      matchDateTime.plusHours(3).isAfter(currentDateTime)) {
-                newPhaseType = 3;
+                newPhaseType = 3; // Идет
             }
             else if (matchDateTime.plusHours(3).isBefore(currentDateTime)) {
-                newPhaseType = 1;
+                newPhaseType = 1; // Завершен
             }
             
             if (newPhaseType != null && !newPhaseType.equals(oldPhaseType)) {
@@ -104,7 +104,7 @@ public class MatchService implements IMatchService {
                 matchRepository.save(match);
             }
         }
-
+        
         for (int stage = 2; stage <= 4; stage++) {
             tryGenerateNextRound(stage);
         }
