@@ -3,7 +3,9 @@ package ru.rsatu.resource;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.util.Map;
 
+import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -15,6 +17,8 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.Response;
+import ru.rsatu.dto.MatchAvailabilityRequest;
+import ru.rsatu.dto.MatchRestrictionsDTO;
 import ru.rsatu.services.MatchService;
 import ru.rsatu.dto.MatchDTO;
 
@@ -74,5 +78,24 @@ public class MatchResource {
     public Response deleteById(@PathParam("id") Long id) {
         matchService.deleteById(id);
         return Response.noContent().build();
+    }
+
+    @POST
+    @Path("/filter")
+    @PermitAll
+    public List<MatchDTO> filterMatches(MatchRestrictionsDTO restrictions) {
+        return matchService.getByRestrictions(
+                restrictions.getTeamId(),
+                restrictions.getRefereeId(),
+                restrictions.getDate()
+        );
+    }
+
+    @POST
+    @Path("/check-availability")
+    @PermitAll
+    public Response checkAvailability(MatchAvailabilityRequest request) {
+        boolean available = matchService.checkAvailability(request);
+        return Response.ok(Map.of("available", available)).build();
     }
 }

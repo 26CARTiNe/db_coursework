@@ -13,6 +13,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.NotFoundException;
+import ru.rsatu.dto.MatchAvailabilityRequest;
 import ru.rsatu.entity.CityEntity;
 import ru.rsatu.entity.MatchEntity;
 import ru.rsatu.dto.MatchDTO;
@@ -396,5 +397,42 @@ public class MatchService implements IMatchService {
             
             matchRepository.save(newMatch);
         }
+    }
+
+    public List<MatchDTO> getByRestrictions(Long teamId, Long refereeId, LocalDate date) {
+        List<MatchEntity> matches = matchRepository.findByRestrictions(teamId, refereeId, date);
+        return matches.stream().map(this::toDTO).toList();
+    }
+
+    public boolean checkAvailability(MatchAvailabilityRequest request) {
+        LocalDate date = request.getDateTime().toLocalDate();
+
+        if (request.getTeamGuestId().equals(request.getTeamHostId())) {
+            return false;
+        }
+
+        boolean teamGuestBusy = matchRepository.isTeamBusyOnDate(
+                request.getTeamGuestId(),
+                date,
+                request.getExcludeMatchId()
+        );
+
+        boolean teamHostBusy = matchRepository.isTeamBusyOnDate(
+                request.getTeamHostId(),
+                date,
+                request.getExcludeMatchId()
+        );
+
+        if (teamGuestBusy || teamHostBusy) {
+            return false;
+        }
+
+        boolean refereeBusy = matchRepository.isRefereeBusyOnDate(
+                request.getRefereeId(),
+                date,
+                request.getExcludeMatchId()
+        );
+
+        return !refereeBusy;
     }
 }
